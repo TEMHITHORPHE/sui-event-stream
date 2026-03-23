@@ -29,18 +29,21 @@ impl CheckpointEventSource {
 #[async_trait]
 impl EventSource for CheckpointEventSource {
     async fn next_events(&mut self) -> Vec<RawEvent> {
-        let stream_subscription_read_mask: FieldMask = FieldMask {
-            paths: vec![
-                "sequence_number".to_string(),
-                "transactions.digest".to_string(),
-                "transactions.events".to_string(),
-                "transactions.timestamp".to_string(),
-            ],
-        };
-        let subscribe_checkpoints_request =
-            SubscribeCheckpointsRequest::default().with_read_mask(stream_subscription_read_mask);
 
         if self.stream.is_none() {
+
+            let stream_subscription_read_mask: FieldMask = FieldMask {
+                paths: vec![
+                    "sequence_number".to_string(),
+                    "transactions.digest".to_string(),
+                    "transactions.events".to_string(),
+                    "transactions.timestamp".to_string(),
+                ],
+            };
+
+            let subscribe_checkpoints_request = SubscribeCheckpointsRequest::default()
+                .with_read_mask(stream_subscription_read_mask);
+
             let mut subscription = self.client.subscription_client();
             match subscription
                 .subscribe_checkpoints(subscribe_checkpoints_request)
@@ -53,6 +56,7 @@ impl EventSource for CheckpointEventSource {
                 }
             }
         }
+        
         let stream = if let Some(stream) = self.stream.as_mut() {
             stream
         } else {
